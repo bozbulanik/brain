@@ -11,11 +11,30 @@
   --color-hover: #D4D4D4;
   --color-hover-dark: #222222;
 
-  --color-button: #eee;
+  /* --color-button: #eee;
   --color-button-dark: #222222;
 
   --color-button-hover: #ddd;
-  --color-button-hover-dark: #222222;
+  --color-button-hover-dark: #222222; */
+
+
+
+
+  --color-button: #FCFCFC;
+  --color-button-dark: #181818;
+  
+  --color-button-hover: #ECECEC;
+  --color-button-hover-dark: #252525;
+
+  --color-button-border: #DDDDDD;
+  --color-button-border-dark: #262626;
+
+  --color-button-border-hover: #D3D3D3;
+  --color-button-border-hover-dark: #313131;
+
+
+
+
 
   --color-border: #ddd;
   --color-border-dark: #262626;

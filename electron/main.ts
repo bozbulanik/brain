@@ -28,6 +28,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 
 let initialWindow: BrowserWindow | null
 let logWindow: BrowserWindow | null
+let searchWindow: BrowserWindow | null
 
 function createInitialWindow() {
   initialWindow = new BrowserWindow({
@@ -70,9 +71,13 @@ app.on('activate', () => {
 
 app.whenReady().then(() => {
   createInitialWindow()
-  globalShortcut.register('Control+N', () => {
+  globalShortcut.register('CommandOrControl+N', () => {
     createLogWindow()
     logWindow?.focus()
+  })
+  globalShortcut.register('CommandOrControl+Space', () => {
+    createSearchWindow()
+    searchWindow?.focus()
   })
 })
 
@@ -126,13 +131,66 @@ function createLogWindow() {
   }
 }
 
+function createSearchWindow() {
+  if (searchWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      searchWindow.loadURL(`${VITE_DEV_SERVER_URL}search`)
+    } else {
+      // logWindow.loadFile('dist/index.html')
+      searchWindow.loadFile(path.join(RENDERER_DIST, 'search'))
+    }
+    return
+  }
+  searchWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    transparent: true,
+    center: true,
+    title: '',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  searchWindow.on('closed', () => {
+    searchWindow = null
+  })
+  // Test active push message to Renderer-process.
+  searchWindow.webContents.on('did-finish-load', () => {
+    searchWindow?.webContents.send('main-process-message', new Date().toLocaleString())
+  })
+
+  if (VITE_DEV_SERVER_URL) {
+    searchWindow.loadURL(`${VITE_DEV_SERVER_URL}search`)
+  } else {
+    // logWindow.loadFile('dist/index.html')
+    searchWindow.loadFile(path.join(RENDERER_DIST, 'search'))
+  }
+}
+
 ipcMain.handle('openWindow', async (_, windowName) => {
   switch (windowName) {
     case 'log':
       createLogWindow()
       logWindow?.focus()
       break
-
+    case 'search':
+      createSearchWindow()
+      searchWindow?.focus()
+      break
     default:
       break
   }
@@ -142,7 +200,9 @@ ipcMain.handle('closeWindow', async (_, windowName) => {
     case 'log':
       logWindow?.close()
       break
-
+    case 'search':
+      searchWindow?.close()
+      break
     default:
       break
   }
