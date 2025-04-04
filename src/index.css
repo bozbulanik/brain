@@ -1,0 +1,80 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-background: #fafafa; 
+  --color-background-dark: #09090B; /* #0a0a0a */
+
+  --color-secondary-background: #fff;
+  --color-secondary-background-dark: #18181a;
+
+  --color-hover: #eee;
+  --color-hover-dark: #333;
+
+  --color-button: #eee;
+  --color-button-dark: #333;
+
+  --color-button-hover: #ccc;
+  --color-button-hover-dark: #555;
+
+  --color-border: #dddddd;
+  --color-border-dark: #262626;
+
+  --color-text: #18181b;
+  --color-text-dark: #f0ede4;
+
+  --color-text-muted: #71717a;
+
+  --radius-br: 8px;
+
+  --color-scrollbar-track: #eee;
+  --color-scrollbar-track-dark: #333;
+
+  --color-scrollbar-thumb: #ccc;
+  --color-scrollbar-thumb-dark: #555;
+
+}
+
+
+@layer base {
+  html,
+  body {
+    @apply select-none;
+    @apply font-sans antialiased;
+
+  }
+
+  .drag-bar {
+      -webkit-app-region: drag;
+    } 
+
+  /* button {
+    -webkit-app-region: no-drag;
+    cursor: pointer;
+  } */
+
+  ::-webkit-scrollbar {
+    @apply w-1;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-scrollbar-thumb rounded-md;
+  }
+  .dark ::-webkit-scrollbar-thumb  {
+    @apply bg-scrollbar-thumb-dark rounded-md;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-scrollbar-track;
+  }
+  .dark ::-webkit-scrollbar-track  {
+    @apply bg-scrollbar-track-dark;
+  }
+  .tiptap p.is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+}
