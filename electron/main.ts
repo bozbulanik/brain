@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -22,28 +22,31 @@ export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
+  ? path.join(process.env.APP_ROOT, 'public')
+  : RENDERER_DIST
 
-let win: BrowserWindow | null
+let initialWindow: BrowserWindow | null
+let logWindow: BrowserWindow | null
 
-function createWindow() {
-  win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+function createInitialWindow() {
+  initialWindow = new BrowserWindow({
+    show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.mjs'),
-    },
+      preload: path.join(__dirname, 'preload.mjs')
+    }
   })
 
   // Test active push message to Renderer-process.
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', (new Date).toLocaleString())
+  initialWindow.webContents.on('did-finish-load', () => {
+    initialWindow?.webContents.send('main-process-message', new Date().toLocaleString())
   })
 
   if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL)
+    initialWindow.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    // win.loadFile('dist/index.html')
-    win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    // initialWindow.loadFile('dist/index.html')
+    initialWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 }
 
@@ -53,7 +56,7 @@ function createWindow() {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
-    win = null
+    initialWindow = null
   }
 })
 
@@ -61,8 +64,86 @@ app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
+    createInitialWindow()
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createInitialWindow()
+  globalShortcut.register('Control+N', () => {
+    createLogWindow()
+    logWindow?.focus()
+  })
+})
+
+function createLogWindow() {
+  if (logWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      logWindow.loadURL(`${VITE_DEV_SERVER_URL}logger`)
+    } else {
+      // logWindow.loadFile('dist/index.html')
+      logWindow.loadFile(path.join(RENDERER_DIST, 'logger'))
+    }
+    return
+  }
+  logWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    transparent: true,
+    center: true,
+    title: '',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  logWindow.on('closed', () => {
+    logWindow = null
+  })
+  // Test active push message to Renderer-process.
+  logWindow.webContents.on('did-finish-load', () => {
+    logWindow?.webContents.send('main-process-message', new Date().toLocaleString())
+  })
+
+  if (VITE_DEV_SERVER_URL) {
+    logWindow.loadURL(`${VITE_DEV_SERVER_URL}logger`)
+  } else {
+    // logWindow.loadFile('dist/index.html')
+    logWindow.loadFile(path.join(RENDERER_DIST, 'logger'))
+  }
+}
+
+ipcMain.handle('openWindow', async (_, windowName) => {
+  switch (windowName) {
+    case 'log':
+      createLogWindow()
+      logWindow?.focus()
+      break
+
+    default:
+      break
+  }
+})
+ipcMain.handle('closeWindow', async (_, windowName) => {
+  switch (windowName) {
+    case 'log':
+      logWindow?.close()
+      break
+
+    default:
+      break
+  }
+})
