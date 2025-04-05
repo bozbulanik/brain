@@ -1,6 +1,5 @@
-import { BrainCogIcon, Pipette, Settings } from 'lucide-react'
+import { BrainCogIcon, Keyboard, Pipette, Settings, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { twMerge } from 'tailwind-merge'
 
 interface SettingsLayoutProps {
   children: React.ReactNode
@@ -16,24 +15,38 @@ const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
         <div className="w-full h-full flex">
           <div className="w-32 p-2 bg-secondary-background dark:bg-secondary-background-dark border-r border-border dark:border-border-dark">
             <Link
+              to="/settings/user"
+              className="text-left outline-none h-6 flex items-center gap-2 p-2 rounded-md hover:bg-hover dark:hover:bg-hover-dark transition text-sm"
+            >
+              <User size={16} strokeWidth={1.5} />
+              <span className="">User</span>
+            </Link>
+            <Link
               to="/settings"
               className="text-left outline-none h-6 flex items-center gap-2 p-2 rounded-md hover:bg-hover dark:hover:bg-hover-dark transition text-sm"
             >
-              <Settings size={16} />
+              <Settings size={16} strokeWidth={1.5} />
               <span className="">General</span>
+            </Link>
+            <Link
+              to="/settings/shortcuts"
+              className="text-left outline-none h-6 flex items-center gap-2 p-2 rounded-md hover:bg-hover dark:hover:bg-hover-dark transition text-sm"
+            >
+              <Keyboard size={16} strokeWidth={1.5} />
+              <span className="">Shortcuts</span>
             </Link>
             <Link
               to="/settings/appearance"
               className="text-left outline-none h-6 flex items-center gap-2 p-2 rounded-md hover:bg-hover dark:hover:bg-hover-dark transition text-sm"
             >
-              <Pipette size={16} />
+              <Pipette size={16} strokeWidth={1.5} />
               <span className="">Appearance</span>
             </Link>
             <Link
-              to="/settings"
+              to="/settings/about"
               className="text-left outline-none h-6 flex items-center gap-2 p-2 rounded-md hover:bg-hover dark:hover:bg-hover-dark transition text-sm"
             >
-              <BrainCogIcon size={16} />
+              <BrainCogIcon size={16} strokeWidth={1.5} />
               <span className="">About</span>
             </Link>
           </div>

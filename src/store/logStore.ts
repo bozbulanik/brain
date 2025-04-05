@@ -130,7 +130,7 @@ const LogData: Log[] = [
   }
 ]
 
-export const useStore = create<AppState>((set, get) => ({
+export const useLogStore = create<AppState>((set, get) => ({
   logs: LogData,
   sidebarItems: ['1', '2'],
 

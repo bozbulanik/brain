@@ -1,26 +1,21 @@
 import {
   Calendar,
   ChartArea,
-  ChevronUp,
-  Copy,
   CornerDownLeft,
-  Edit,
   FolderIcon,
   MoreHorizontal,
   Music,
   Notebook,
   NotebookText,
-  Pen,
   Pin,
   PinOff,
-  Plus,
   Settings,
   SquareArrowOutUpRight,
   Trash,
   X
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { useStore } from '../store/store'
+import { useLogStore } from '../store/logStore'
 import { useNavigate } from 'react-router-dom'
 
 type SelectableItem = {
@@ -33,11 +28,11 @@ type SelectableItem = {
 }
 
 const SearchPage = () => {
-  const logs = useStore((state) => state.logs)
-  const searchItems = useStore((state) => state.searchItems)
-  const pinItem = useStore((state) => state.pinItem)
-  const unpinItem = useStore((state) => state.unpinItem)
-  const deleteItem = useStore((state) => state.deleteItem)
+  const logs = useLogStore((state) => state.logs)
+  const searchItems = useLogStore((state) => state.searchItems)
+  const pinItem = useLogStore((state) => state.pinItem)
+  const unpinItem = useLogStore((state) => state.unpinItem)
+  const deleteItem = useLogStore((state) => state.deleteItem)
 
   const navigate = useNavigate()
 
@@ -172,24 +167,24 @@ const SearchPage = () => {
       return [
         {
           label: 'Open',
-          icon: <SquareArrowOutUpRight size={16} />,
+          icon: <SquareArrowOutUpRight size={16} strokeWidth={1.5} />,
           action: () => handleOpen(itemId),
           shortcut: (
             <div className="ml-auto flex gap-1">
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                <CornerDownLeft size={14} />
+                <CornerDownLeft size={16} strokeWidth={1.5} />
               </div>
             </div>
           )
         },
         {
           label: 'Unpin',
-          icon: <PinOff size={16} />,
+          icon: <PinOff size={16} strokeWidth={1.5} />,
           action: () => handleUnpin(itemId),
           shortcut: (
             <div className="ml-auto flex gap-1">
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                <CornerDownLeft size={14} />
+                <CornerDownLeft size={16} strokeWidth={1.5} />
               </div>
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
                 P
@@ -199,13 +194,13 @@ const SearchPage = () => {
         },
         {
           label: 'Delete',
-          icon: <Trash size={16} />,
+          icon: <Trash size={16} strokeWidth={1.5} />,
           action: () => handleDelete(itemId),
           danger: true,
           shortcut: (
             <div className="ml-auto flex gap-1 text-text dark:text-text-dark">
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                <CornerDownLeft size={14} />
+                <CornerDownLeft size={16} strokeWidth={1.5} />
               </div>
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
                 D
@@ -218,24 +213,24 @@ const SearchPage = () => {
       return [
         {
           label: 'Open',
-          icon: <SquareArrowOutUpRight size={16} />,
+          icon: <SquareArrowOutUpRight size={16} strokeWidth={1.5} />,
           action: () => handleOpen(itemId),
           shortcut: (
             <div className="ml-auto flex gap-1">
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                <CornerDownLeft size={14} />
+                <CornerDownLeft size={16} strokeWidth={1.5} />
               </div>
             </div>
           )
         },
         {
           label: 'Pin',
-          icon: <Pin size={16} />,
+          icon: <Pin size={16} strokeWidth={1.5} />,
           action: () => handlePin(itemId),
           shortcut: (
             <div className="ml-auto flex gap-1">
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                <CornerDownLeft size={14} />
+                <CornerDownLeft size={16} strokeWidth={1.5} />
               </div>
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
                 P
@@ -245,13 +240,13 @@ const SearchPage = () => {
         },
         {
           label: 'Delete',
-          icon: <Trash size={16} />,
+          icon: <Trash size={16} strokeWidth={1.5} />,
           action: () => handleDelete(itemId),
           danger: true,
           shortcut: (
             <div className="ml-auto flex gap-1 text-text dark:text-text-dark">
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                <CornerDownLeft size={14} />
+                <CornerDownLeft size={16} strokeWidth={1.5} />
               </div>
               <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
                 D
@@ -337,17 +332,17 @@ const SearchPage = () => {
   const getIcon = (type: string) => {
     switch (type) {
       case 'note':
-        return <Notebook size={16} />
+        return <Notebook size={16} strokeWidth={1.5} />
       case 'audio':
-        return <Music size={16} />
+        return <Music size={16} strokeWidth={1.5} />
       case 'task':
-        return <NotebookText size={16} />
+        return <NotebookText size={16} strokeWidth={1.5} />
       case 'collection':
-        return <FolderIcon size={16} />
+        return <FolderIcon size={16} strokeWidth={1.5} />
       case 'navigation':
         return null
       default:
-        return <NotebookText size={16} />
+        return <NotebookText size={16} strokeWidth={1.5} />
     }
   }
 
@@ -382,7 +377,7 @@ const SearchPage = () => {
     const options = getDropdownOptions(itemId)
 
     return (
-      <div className="dropdown-menu absolute right-9 top-2 z-10 bg-background dark:bg-background-dark shadow-lg dark:shadow-zinc-900 rounded-md border border-border dark:border-border-dark min-w-42">
+      <div className="dropdown-menu absolute right-9 top-2 z-10 bg-background dark:bg-background-dark rounded-md border border-border dark:border-border-dark min-w-42">
         <div className="flex flex-col p-1">
           {options.map((option, index) => {
             const isSelected = dropdownSelectedIndex === index
@@ -438,7 +433,7 @@ const SearchPage = () => {
             }}
             className="p-1 cursor-pointer rounded-full flex items-center border border-button-border dark:border-button-border-dark bg-button dark:bg-button-dark hover:bg-button-hover hover:border-button-border-hover dark:hover:bg-button-hover-dark dark:hover:border-button-border-hover-dark"
           >
-            <X size={12} />
+            <X size={12} strokeWidth={1.5} />
           </button>
         </div>
         <div className="p-2 flex flex-col bg-secondary-background dark:bg-secondary-background-dark border-b border-border dark:border-border-dark">
@@ -455,9 +450,9 @@ const SearchPage = () => {
                     : 'bg-button dark:bg-button-dark hover:bg-button-hover hover:border-button-border-hover dark:hover:bg-button-hover-dark dark:hover:border-button-border-hover-dark'
                 } p-2 rounded-md`}
               >
-                {button.id === 'calendar' && <Calendar size={16} />}
-                {button.id === 'analytics' && <ChartArea size={16} />}
-                {button.id === 'settings' && <Settings size={16} />}
+                {button.id === 'calendar' && <Calendar size={16} strokeWidth={1.5} />}
+                {button.id === 'analytics' && <ChartArea size={16} strokeWidth={1.5} />}
+                {button.id === 'settings' && <Settings size={16} strokeWidth={1.5} />}
                 <span>{button.title}</span>
               </button>
             ))}
@@ -504,7 +499,7 @@ const SearchPage = () => {
                         hoveredItemId === item.id ? 'opacity-100' : 'opacity-0'
                       }`}
                     >
-                      <MoreHorizontal size={16} />
+                      <MoreHorizontal size={16} strokeWidth={1.5} />
                     </button>
                   </div>
                   {renderDropdownMenu(item.id)}
@@ -550,7 +545,7 @@ const SearchPage = () => {
                         hoveredItemId === item.id ? 'opacity-100' : 'opacity-0'
                       }`}
                     >
-                      <MoreHorizontal size={16} />
+                      <MoreHorizontal size={16} strokeWidth={1.5} />
                     </button>
                   </div>
                   {renderDropdownMenu(item.id)}
@@ -569,52 +564,3 @@ const SearchPage = () => {
 }
 
 export default SearchPage
-
-// {
-//   item.id === clickedItemId && (
-//     <div className="absolute right-9 top-2 z-10 bg-background dark:bg-background-dark shadow-lg rounded-md border border-border dark:border-border-dark min-w-42">
-//       <div className="flex flex-col p-1">
-//         <button
-//           onClick={() => handleEdit(item.id)}
-//           className="flex w-full items-center gap-2 p-1 rounded-sm text-sm hover:bg-hover dark:hover:bg-hover-dark"
-//         >
-//           <SquareArrowOutUpRight size={16} /> <span>Open</span>
-//           <div className="ml-auto flex gap-1">
-//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-//               <CornerDownLeft size={14} />
-//             </div>
-//           </div>
-//         </button>
-//         <button
-//           onClick={() => handlePin(item.id)}
-//           className="flex w-full items-center gap-2 p-1 rounded-sm text-sm hover:bg-hover dark:hover:bg-hover-dark"
-//         >
-//           <Pin size={16} /> <span>Pin</span>
-//           <div className="ml-auto flex gap-1">
-//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-//               <ChevronUp size={14} />
-//             </div>
-//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-//               P
-//             </div>
-//           </div>
-//         </button>
-
-//         <button
-//           onClick={() => handleDelete(item.id)}
-//           className="flex w-full items-center gap-2 p-1 rounded-sm text-sm text-red-500 hover:bg-hover dark:hover:bg-hover-dark"
-//         >
-//           <Trash size={16} /> <span>Delete</span>
-//           <div className="ml-auto flex gap-1 text-text dark:text-text-dark">
-//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-//               <ChevronUp size={14} />
-//             </div>
-//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-//               D
-//             </div>
-//           </div>
-//         </button>
-//       </div>
-//     </div>
-//   )
-// }

@@ -112,7 +112,7 @@ const Select: React.FC<SelectProps> = ({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-labelledby="select-label"
-        className={`my-2 h-8 border border-border dark:border-border-dark bg-[#FCFCFC] dark:bg-[#181818] hover:bg-[#ECECEC] dark:hover:bg-[#252525] hover:border-[#D3D3D3] dark:hover:border-[#313131] w-full cursor-pointer text-left outline-none flex items-center justify-between gap-2 p-2 rounded-md ${
+        className={`my-1 h-8 border border-border dark:border-border-dark bg-[#FCFCFC] dark:bg-[#181818] hover:bg-[#ECECEC] dark:hover:bg-[#252525] hover:border-[#D3D3D3] dark:hover:border-[#313131] w-full cursor-pointer text-left outline-none flex items-center justify-between gap-2 p-2 rounded-md ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >
@@ -122,6 +122,7 @@ const Select: React.FC<SelectProps> = ({
         </div>
         <ChevronsUpDown
           size={16}
+          strokeWidth={1.5}
           className={`transition-transform duration-200 ${open ? 'transform rotate-180' : ''}`}
         />
       </button>
@@ -134,7 +135,7 @@ const Select: React.FC<SelectProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className={`absolute left-0 top-full mt-1 w-full bg-background dark:bg-background-dark border border-border dark:border-border-dark rounded-md shadow-lg dark:shadow-zinc-900 z-50 ${className}`}
+            className={`absolute left-0 top-full mt-1 w-full bg-background dark:bg-background-dark border border-border dark:border-border-dark rounded-md z-50 ${className}`}
             role="listbox"
             tabIndex={-1}
           >

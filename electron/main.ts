@@ -1,7 +1,17 @@
-import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron'
+import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import Store from 'electron-store'
+
+import { SettingsSchema } from '../src/store/settingsStore'
+
+const store = new Store<SettingsSchema>({
+  name: 'app-settings',
+  defaults: {
+    theme: 'light'
+  }
+})
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -42,6 +52,11 @@ function createInitialWindow() {
   // Test active push message to Renderer-process.
   initialWindow.webContents.on('did-finish-load', () => {
     initialWindow?.webContents.send('main-process-message', new Date().toLocaleString())
+  })
+
+  initialWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
   })
 
   if (VITE_DEV_SERVER_URL) {
@@ -126,7 +141,10 @@ function createLogWindow() {
   logWindow.webContents.on('did-finish-load', () => {
     logWindow?.webContents.send('main-process-message', new Date().toLocaleString())
   })
-
+  logWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
   if (VITE_DEV_SERVER_URL) {
     logWindow.loadURL(`${VITE_DEV_SERVER_URL}logger`)
   } else {
@@ -175,7 +193,10 @@ function createSearchWindow() {
   searchWindow.webContents.on('did-finish-load', () => {
     searchWindow?.webContents.send('main-process-message', new Date().toLocaleString())
   })
-
+  searchWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
   if (VITE_DEV_SERVER_URL) {
     searchWindow.loadURL(`${VITE_DEV_SERVER_URL}search`)
   } else {
@@ -225,6 +246,11 @@ function createSettingsWindow() {
     settingsWindow?.webContents.send('main-process-message', new Date().toLocaleString())
   })
 
+  settingsWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
   if (VITE_DEV_SERVER_URL) {
     settingsWindow.loadURL(`${VITE_DEV_SERVER_URL}settings`)
   } else {
@@ -265,4 +291,18 @@ ipcMain.handle('closeWindow', async (_, windowName) => {
     default:
       break
   }
+})
+
+ipcMain.handle('getSettings', (_, key?: keyof SettingsSchema) => {
+  return key ? store.get(key) : store.store
+})
+
+ipcMain.handle('setSettings', (_, key: keyof SettingsSchema, value: any) => {
+  store.set(key, value)
+  return true
+})
+
+ipcMain.handle('resetSettings', () => {
+  store.clear()
+  return true
 })

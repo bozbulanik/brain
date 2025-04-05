@@ -12,6 +12,7 @@
     },
     "dependencies": {
         "@tailwindcss/vite": "^4.0.15",
+        "electron-store": "^10.0.1",
         "framer-motion": "^12.6.3",
         "lucide-react": "^0.487.0",
         "react": "^18.2.0",
