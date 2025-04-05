@@ -15290,26 +15290,33 @@ const store = new ElectronStore({
     theme: "light"
   }
 });
-createRequire(import.meta.url);
+const require2 = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const sqlite3 = require2("sqlite3");
+const db = new sqlite3.Database("logs.db", sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+  if (err) {
+    console.error("Database connection error:", err.message);
+  } else {
+    console.log("Connected to SQLite database");
+  }
+});
 process.env.APP_ROOT = path.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
 const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 let initialWindow;
+let welcomeWindow;
 let logWindow;
 let searchWindow;
 let settingsWindow;
+let dataManagerWindow;
 function createInitialWindow() {
   initialWindow = new BrowserWindow({
     show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs")
     }
-  });
-  initialWindow.webContents.on("did-finish-load", () => {
-    initialWindow == null ? void 0 : initialWindow.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
   });
   initialWindow.webContents.setWindowOpenHandler((details) => {
     shell$1.openExternal(details.url);
@@ -15334,6 +15341,10 @@ app$1.on("activate", () => {
 });
 app$1.whenReady().then(() => {
   createInitialWindow();
+  initialWindow == null ? void 0 : initialWindow.webContents.on("did-finish-load", () => {
+    createWelcomeWindow();
+    welcomeWindow == null ? void 0 : welcomeWindow.focus();
+  });
   globalShortcut.register("CommandOrControl+N", () => {
     createLogWindow();
     logWindow == null ? void 0 : logWindow.focus();
@@ -15345,6 +15356,10 @@ app$1.whenReady().then(() => {
   globalShortcut.register("CommandOrControl+Alt+S", () => {
     createSettingsWindow();
     settingsWindow == null ? void 0 : settingsWindow.focus();
+  });
+  globalShortcut.register("CommandOrControl+D", () => {
+    createDataManagerWindow();
+    dataManagerWindow == null ? void 0 : dataManagerWindow.focus();
   });
 });
 function createLogWindow() {
@@ -15485,8 +15500,108 @@ function createSettingsWindow() {
     settingsWindow.loadFile(path.join(RENDERER_DIST, "settings"));
   }
 }
+function createWelcomeWindow() {
+  if (welcomeWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      welcomeWindow.loadURL(`${VITE_DEV_SERVER_URL}welcome`);
+    } else {
+      welcomeWindow.loadFile(path.join(RENDERER_DIST, "welcome"));
+    }
+    return;
+  }
+  welcomeWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: "",
+    frame: false,
+    vibrancy: "under-window",
+    backgroundMaterial: "acrylic",
+    visualEffectState: "active",
+    titleBarStyle: "hidden",
+    trafficLightPosition: { x: 12, y: 10 },
+    webPreferences: {
+      preload: path.join(__dirname, "preload.mjs"),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  });
+  welcomeWindow.on("closed", () => {
+    welcomeWindow = null;
+  });
+  welcomeWindow.webContents.on("did-finish-load", () => {
+    welcomeWindow == null ? void 0 : welcomeWindow.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  });
+  welcomeWindow.webContents.setWindowOpenHandler((details) => {
+    shell$1.openExternal(details.url);
+    return { action: "deny" };
+  });
+  if (VITE_DEV_SERVER_URL) {
+    welcomeWindow.loadURL(`${VITE_DEV_SERVER_URL}welcome`);
+  } else {
+    welcomeWindow.loadFile(path.join(RENDERER_DIST, "welcome"));
+  }
+}
+function createDataManagerWindow() {
+  if (dataManagerWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      dataManagerWindow.loadURL(`${VITE_DEV_SERVER_URL}datamanager`);
+    } else {
+      dataManagerWindow.loadFile(path.join(RENDERER_DIST, "datamanager"));
+    }
+    return;
+  }
+  dataManagerWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: "",
+    frame: false,
+    vibrancy: "under-window",
+    backgroundMaterial: "acrylic",
+    visualEffectState: "active",
+    titleBarStyle: "hidden",
+    trafficLightPosition: { x: 12, y: 10 },
+    webPreferences: {
+      preload: path.join(__dirname, "preload.mjs"),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  });
+  dataManagerWindow.on("closed", () => {
+    dataManagerWindow = null;
+  });
+  dataManagerWindow.webContents.on("did-finish-load", () => {
+    dataManagerWindow == null ? void 0 : dataManagerWindow.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  });
+  dataManagerWindow.webContents.setWindowOpenHandler((details) => {
+    shell$1.openExternal(details.url);
+    return { action: "deny" };
+  });
+  if (VITE_DEV_SERVER_URL) {
+    dataManagerWindow.loadURL(`${VITE_DEV_SERVER_URL}datamanager`);
+  } else {
+    dataManagerWindow.loadFile(path.join(RENDERER_DIST, "datamanager"));
+  }
+}
 ipcMain$1.handle("openWindow", async (_, windowName) => {
   switch (windowName) {
+    case "datamanager":
+      createDataManagerWindow();
+      dataManagerWindow == null ? void 0 : dataManagerWindow.focus();
+      break;
+    case "welcome":
+      createWelcomeWindow();
+      welcomeWindow == null ? void 0 : welcomeWindow.focus();
+      break;
     case "log":
       createLogWindow();
       logWindow == null ? void 0 : logWindow.focus();
@@ -15503,6 +15618,12 @@ ipcMain$1.handle("openWindow", async (_, windowName) => {
 });
 ipcMain$1.handle("closeWindow", async (_, windowName) => {
   switch (windowName) {
+    case "datamanager":
+      dataManagerWindow == null ? void 0 : dataManagerWindow.close();
+      break;
+    case "welcome":
+      welcomeWindow == null ? void 0 : welcomeWindow.close();
+      break;
     case "log":
       logWindow == null ? void 0 : logWindow.close();
       break;
@@ -15525,6 +15646,29 @@ ipcMain$1.handle("resetSettings", () => {
   store.clear();
   return true;
 });
+ipcMain$1.handle("get-data", async () => {
+  return new Promise((resolve2, reject) => {
+    db.all("SELECT * FROM logs", [], (err, rows) => {
+      if (err) reject(err);
+      else resolve2(rows);
+    });
+  });
+});
+ipcMain$1.handle(
+  "add-data",
+  async (_, id2, type2, title2, content2, createdAt, updatedAt) => {
+    return new Promise((resolve2, reject) => {
+      db.run(
+        "INSERT INTO logs (type, title, content, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)",
+        [type2, title2, content2, createdAt, updatedAt],
+        function(err) {
+          if (err) reject(err);
+          else resolve2({ id: db.lastID, content: content2 });
+        }
+      );
+    });
+  }
+);
 export {
   MAIN_DIST,
   RENDERER_DIST,

@@ -28,7 +28,10 @@ type SelectableItem = {
 }
 
 const SearchPage = () => {
-  const logs = useLogStore((state) => state.logs)
+  const { logs, loadLogs } = useLogStore()
+  useEffect(() => {
+    loadLogs()
+  }, [])
   const searchItems = useLogStore((state) => state.searchItems)
   const pinItem = useLogStore((state) => state.pinItem)
   const unpinItem = useLogStore((state) => state.unpinItem)

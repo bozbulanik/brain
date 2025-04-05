@@ -10,6 +10,8 @@ import { useEffect } from 'react'
 import SettingsAboutPage from './pages/settings/SettingsAboutPage'
 import SettingsShortcutsPage from './pages/settings/SettingsShortcutsPage'
 import SettingsUserPage from './pages/settings/SettingsUserPage'
+import WelcomePage from './pages/WelcomePage'
+import DataManagerPage from './pages/DataManagerPage'
 
 function App() {
   const { settings, initialized, initializeSettings } = useSettingsStore()
@@ -31,9 +33,24 @@ function App() {
   }
 
   return (
-    // <ThemeProvider>
     <Router>
       <Routes>
+        <Route
+          path="/datamanager"
+          element={
+            <RootLayout>
+              <DataManagerPage />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/welcome"
+          element={
+            <RootLayout>
+              <WelcomePage />
+            </RootLayout>
+          }
+        />
         <Route
           path="/logger"
           element={
@@ -102,7 +119,6 @@ function App() {
         />
       </Routes>
     </Router>
-    // </ThemeProvider>
   )
 }
 

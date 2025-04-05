@@ -16,6 +16,14 @@ const store = new Store<SettingsSchema>({
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+const sqlite3 = require('sqlite3')
+const db = new sqlite3.Database('logs.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+  if (err) {
+    console.error('Database connection error:', err.message)
+  } else {
+    console.log('Connected to SQLite database')
+  }
+})
 // The built directory structure
 //
 // ├─┬─┬ dist
@@ -37,9 +45,11 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST
 
 let initialWindow: BrowserWindow | null
+let welcomeWindow: BrowserWindow | null
 let logWindow: BrowserWindow | null
 let searchWindow: BrowserWindow | null
 let settingsWindow: BrowserWindow | null
+let dataManagerWindow: BrowserWindow | null
 
 function createInitialWindow() {
   initialWindow = new BrowserWindow({
@@ -47,11 +57,6 @@ function createInitialWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs')
     }
-  })
-
-  // Test active push message to Renderer-process.
-  initialWindow.webContents.on('did-finish-load', () => {
-    initialWindow?.webContents.send('main-process-message', new Date().toLocaleString())
   })
 
   initialWindow.webContents.setWindowOpenHandler((details) => {
@@ -87,6 +92,12 @@ app.on('activate', () => {
 
 app.whenReady().then(() => {
   createInitialWindow()
+
+  initialWindow?.webContents.on('did-finish-load', () => {
+    createWelcomeWindow()
+    welcomeWindow?.focus()
+  })
+
   globalShortcut.register('CommandOrControl+N', () => {
     createLogWindow()
     logWindow?.focus()
@@ -98,6 +109,10 @@ app.whenReady().then(() => {
   globalShortcut.register('CommandOrControl+Alt+S', () => {
     createSettingsWindow()
     settingsWindow?.focus()
+  })
+  globalShortcut.register('CommandOrControl+D', () => {
+    createDataManagerWindow()
+    dataManagerWindow?.focus()
   })
 })
 
@@ -259,8 +274,124 @@ function createSettingsWindow() {
   }
 }
 
+function createWelcomeWindow() {
+  if (welcomeWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      welcomeWindow.loadURL(`${VITE_DEV_SERVER_URL}welcome`)
+    } else {
+      // logWindow.loadFile('dist/index.html')
+      welcomeWindow.loadFile(path.join(RENDERER_DIST, 'welcome'))
+    }
+    return
+  }
+  welcomeWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: '',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  welcomeWindow.on('closed', () => {
+    welcomeWindow = null
+  })
+  // Test active push message to Renderer-process.
+  welcomeWindow.webContents.on('did-finish-load', () => {
+    welcomeWindow?.webContents.send('main-process-message', new Date().toLocaleString())
+  })
+
+  welcomeWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  if (VITE_DEV_SERVER_URL) {
+    welcomeWindow.loadURL(`${VITE_DEV_SERVER_URL}welcome`)
+  } else {
+    // logWindow.loadFile('dist/index.html')
+    welcomeWindow.loadFile(path.join(RENDERER_DIST, 'welcome'))
+  }
+}
+
+function createDataManagerWindow() {
+  if (dataManagerWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      dataManagerWindow.loadURL(`${VITE_DEV_SERVER_URL}datamanager`)
+    } else {
+      // logWindow.loadFile('dist/index.html')
+      dataManagerWindow.loadFile(path.join(RENDERER_DIST, 'datamanager'))
+    }
+    return
+  }
+  dataManagerWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: '',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  dataManagerWindow.on('closed', () => {
+    dataManagerWindow = null
+  })
+  // Test active push message to Renderer-process.
+  dataManagerWindow.webContents.on('did-finish-load', () => {
+    dataManagerWindow?.webContents.send('main-process-message', new Date().toLocaleString())
+  })
+
+  dataManagerWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  if (VITE_DEV_SERVER_URL) {
+    dataManagerWindow.loadURL(`${VITE_DEV_SERVER_URL}datamanager`)
+  } else {
+    // logWindow.loadFile('dist/index.html')
+    dataManagerWindow.loadFile(path.join(RENDERER_DIST, 'datamanager'))
+  }
+}
+
 ipcMain.handle('openWindow', async (_, windowName) => {
   switch (windowName) {
+    case 'datamanager':
+      createDataManagerWindow()
+      dataManagerWindow?.focus()
+      break
+    case 'welcome':
+      createWelcomeWindow()
+      welcomeWindow?.focus()
+      break
     case 'log':
       createLogWindow()
       logWindow?.focus()
@@ -279,6 +410,12 @@ ipcMain.handle('openWindow', async (_, windowName) => {
 })
 ipcMain.handle('closeWindow', async (_, windowName) => {
   switch (windowName) {
+    case 'datamanager':
+      dataManagerWindow?.close()
+      break
+    case 'welcome':
+      welcomeWindow?.close()
+      break
     case 'log':
       logWindow?.close()
       break
@@ -306,3 +443,36 @@ ipcMain.handle('resetSettings', () => {
   store.clear()
   return true
 })
+
+ipcMain.handle('get-data', async () => {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT * FROM logs', [], (err, rows) => {
+      if (err) reject(err)
+      else resolve(rows)
+    })
+  })
+})
+
+ipcMain.handle(
+  'add-data',
+  async (
+    _,
+    id: number,
+    type: string,
+    title: string,
+    content: string,
+    createdAt: Date,
+    updatedAt: Date
+  ) => {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO logs (type, title, content, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)',
+        [type, title, content, createdAt, updatedAt],
+        function (err) {
+          if (err) reject(err)
+          else resolve({ id: db.lastID, content })
+        }
+      )
+    })
+  }
+)
