@@ -12,6 +12,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let initialWindow;
 let logWindow;
 let searchWindow;
+let settingsWindow;
 function createInitialWindow() {
   initialWindow = new BrowserWindow({
     show: false,
@@ -49,6 +50,10 @@ app.whenReady().then(() => {
     createSearchWindow();
     searchWindow == null ? void 0 : searchWindow.focus();
   });
+  globalShortcut.register("CommandOrControl+Alt+S", () => {
+    createSettingsWindow();
+    settingsWindow == null ? void 0 : settingsWindow.focus();
+  });
 });
 function createLogWindow() {
   if (logWindow) {
@@ -64,7 +69,6 @@ function createLogWindow() {
     height: 480,
     resizable: false,
     autoHideMenuBar: true,
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     transparent: true,
     center: true,
     title: "",
@@ -107,7 +111,6 @@ function createSearchWindow() {
     height: 480,
     resizable: false,
     autoHideMenuBar: true,
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     transparent: true,
     center: true,
     title: "",
@@ -136,6 +139,48 @@ function createSearchWindow() {
     searchWindow.loadFile(path.join(RENDERER_DIST, "search"));
   }
 }
+function createSettingsWindow() {
+  if (settingsWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      settingsWindow.loadURL(`${VITE_DEV_SERVER_URL}settings`);
+    } else {
+      settingsWindow.loadFile(path.join(RENDERER_DIST, "settings"));
+    }
+    return;
+  }
+  settingsWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: "",
+    frame: false,
+    vibrancy: "under-window",
+    backgroundMaterial: "acrylic",
+    visualEffectState: "active",
+    titleBarStyle: "hidden",
+    trafficLightPosition: { x: 12, y: 10 },
+    webPreferences: {
+      preload: path.join(__dirname, "preload.mjs"),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  });
+  settingsWindow.on("closed", () => {
+    settingsWindow = null;
+  });
+  settingsWindow.webContents.on("did-finish-load", () => {
+    settingsWindow == null ? void 0 : settingsWindow.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  });
+  if (VITE_DEV_SERVER_URL) {
+    settingsWindow.loadURL(`${VITE_DEV_SERVER_URL}settings`);
+  } else {
+    settingsWindow.loadFile(path.join(RENDERER_DIST, "settings"));
+  }
+}
 ipcMain.handle("openWindow", async (_, windowName) => {
   switch (windowName) {
     case "log":
@@ -146,6 +191,10 @@ ipcMain.handle("openWindow", async (_, windowName) => {
       createSearchWindow();
       searchWindow == null ? void 0 : searchWindow.focus();
       break;
+    case "settings":
+      createSettingsWindow();
+      settingsWindow == null ? void 0 : settingsWindow.focus();
+      break;
   }
 });
 ipcMain.handle("closeWindow", async (_, windowName) => {
@@ -155,6 +204,9 @@ ipcMain.handle("closeWindow", async (_, windowName) => {
       break;
     case "search":
       searchWindow == null ? void 0 : searchWindow.close();
+      break;
+    case "settings":
+      settingsWindow == null ? void 0 : settingsWindow.close();
       break;
   }
 });

@@ -1,8 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import LoggerLayout from './layouts/LoggerLayout'
+import RootLayout from './layouts/RootLayout'
 import { ThemeProvider } from './context/ThemeContext'
 import LoggerPage from './pages/LoggerPage'
 import SearchPage from './pages/SearchPage'
+import SettingsPage from './pages/SettingsPage'
+import SettingsLayout from './layouts/SettingsLayout'
+import SettingsGeneralPage from './pages/settings/SettingsGeneralPage'
+import SettingsAppearancePage from './pages/settings/SettingsAppearancePage'
 
 function App() {
   return (
@@ -12,17 +16,37 @@ function App() {
           <Route
             path="/logger"
             element={
-              <LoggerLayout>
+              <RootLayout>
                 <LoggerPage />
-              </LoggerLayout>
+              </RootLayout>
             }
           />
           <Route
             path="/search"
             element={
-              <LoggerLayout>
+              <RootLayout>
                 <SearchPage />
-              </LoggerLayout>
+              </RootLayout>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <RootLayout>
+                <SettingsLayout>
+                  <SettingsGeneralPage />
+                </SettingsLayout>
+              </RootLayout>
+            }
+          />
+          <Route
+            path="/settings/appearance"
+            element={
+              <RootLayout>
+                <SettingsLayout>
+                  <SettingsAppearancePage />
+                </SettingsLayout>
+              </RootLayout>
             }
           />
         </Routes>

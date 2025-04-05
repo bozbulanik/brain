@@ -1,8 +1,8 @@
-interface LoggerLayoutProps {
+interface RootLayoutProps {
   children: React.ReactNode
 }
 
-const LoggerLayout: React.FC<LoggerLayoutProps> = ({ children }) => {
+const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   return (
     <div className="overflow-hidden h-screen w-screen rounded-rounded border-1 border-[#939393] dark:border-[#545454] text-text bg-background dark:bg-background-dark dark:text-text-dark">
       <div className="flex flex-row w-full h-full p-1.75 ">
@@ -14,4 +14,4 @@ const LoggerLayout: React.FC<LoggerLayoutProps> = ({ children }) => {
   )
 }
 
-export default LoggerLayout
+export default RootLayout

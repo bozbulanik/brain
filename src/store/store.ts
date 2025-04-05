@@ -9,6 +9,8 @@ interface AppState {
   addNote: (title: string, content: string) => string
   updateNote: (id: string, updates: Partial<Log>) => void
   deleteItem: (id: string) => void
+  pinItem: (id: string) => void
+  unpinItem: (id: string) => void
   searchItems: (query: string) => Log[]
   getEvents: () => Log[]
 }
@@ -160,6 +162,20 @@ export const useStore = create<AppState>((set, get) => ({
       logs: state.logs.filter((log) => log.id !== id)
     }))
   },
+
+  pinItem: (id) => {
+    set((state) => ({
+      logs: state.logs.map((log) => (log.id === id ? { ...log, pinned: true } : log))
+    }))
+  },
+
+  // Add unpin function
+  unpinItem: (id) => {
+    set((state) => ({
+      logs: state.logs.map((log) => (log.id === id ? { ...log, pinned: false } : log))
+    }))
+  },
+
   searchItems: (query) => {
     query = query.toLowerCase()
     const { logs } = get()

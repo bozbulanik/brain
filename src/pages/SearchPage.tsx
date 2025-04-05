@@ -12,6 +12,7 @@ import {
   NotebookText,
   Pen,
   Pin,
+  PinOff,
   Plus,
   Settings,
   SquareArrowOutUpRight,
@@ -34,6 +35,10 @@ type SelectableItem = {
 const SearchPage = () => {
   const logs = useStore((state) => state.logs)
   const searchItems = useStore((state) => state.searchItems)
+  const pinItem = useStore((state) => state.pinItem)
+  const unpinItem = useStore((state) => state.unpinItem)
+  const deleteItem = useStore((state) => state.deleteItem)
+
   const navigate = useNavigate()
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -48,6 +53,7 @@ const SearchPage = () => {
   const [searchResults, setSearchResults] = useState<ReturnType<typeof searchItems>>([])
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null)
   const [clickedItemId, setClickedItemId] = useState<string | null>(null)
+  const [dropdownSelectedIndex, setDropdownSelectedIndex] = useState(0)
 
   useEffect(() => {
     setSearchResults(searchItems(query))
@@ -65,21 +71,21 @@ const SearchPage = () => {
         id: 'calendar',
         type: 'navigation',
         title: 'Calendar',
-        action: () => navigate('/calendar'),
+        action: () => window.ipcRenderer.invoke('openWindow', 'calendar'),
         ref: calendarRef
       },
       {
         id: 'analytics',
         type: 'navigation',
         title: 'Analytics',
-        action: () => navigate('/analytics'),
+        action: () => window.ipcRenderer.invoke('openWindow', 'analytics'),
         ref: analyticsRef
       },
       {
         id: 'settings',
         type: 'navigation',
         title: 'Settings',
-        action: () => navigate('/settings'),
+        action: () => window.ipcRenderer.invoke('openWindow', 'settings'),
         ref: settingsRef
       }
     ]
@@ -104,6 +110,12 @@ const SearchPage = () => {
   const isPinnedSection = (index: number) =>
     index >= navigationCount && index < navigationCount + pinnedCount
   const isSearchResultSection = (index: number) => index >= navigationCount + pinnedCount
+
+  useEffect(() => {
+    if (clickedItemId) {
+      setDropdownSelectedIndex(0)
+    }
+  }, [clickedItemId])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -153,34 +165,170 @@ const SearchPage = () => {
     }
   }
 
+  const getDropdownOptions = (itemId: string) => {
+    const isPinned = pinnedItems.some((item) => item.id === itemId)
+
+    if (isPinned) {
+      return [
+        {
+          label: 'Open',
+          icon: <SquareArrowOutUpRight size={16} />,
+          action: () => handleOpen(itemId),
+          shortcut: (
+            <div className="ml-auto flex gap-1">
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                <CornerDownLeft size={14} />
+              </div>
+            </div>
+          )
+        },
+        {
+          label: 'Unpin',
+          icon: <PinOff size={16} />,
+          action: () => handleUnpin(itemId),
+          shortcut: (
+            <div className="ml-auto flex gap-1">
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                <CornerDownLeft size={14} />
+              </div>
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                P
+              </div>
+            </div>
+          )
+        },
+        {
+          label: 'Delete',
+          icon: <Trash size={16} />,
+          action: () => handleDelete(itemId),
+          danger: true,
+          shortcut: (
+            <div className="ml-auto flex gap-1 text-text dark:text-text-dark">
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                <CornerDownLeft size={14} />
+              </div>
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                D
+              </div>
+            </div>
+          )
+        }
+      ]
+    } else {
+      return [
+        {
+          label: 'Open',
+          icon: <SquareArrowOutUpRight size={16} />,
+          action: () => handleOpen(itemId),
+          shortcut: (
+            <div className="ml-auto flex gap-1">
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                <CornerDownLeft size={14} />
+              </div>
+            </div>
+          )
+        },
+        {
+          label: 'Pin',
+          icon: <Pin size={16} />,
+          action: () => handlePin(itemId),
+          shortcut: (
+            <div className="ml-auto flex gap-1">
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                <CornerDownLeft size={14} />
+              </div>
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                P
+              </div>
+            </div>
+          )
+        },
+        {
+          label: 'Delete',
+          icon: <Trash size={16} />,
+          action: () => handleDelete(itemId),
+          danger: true,
+          shortcut: (
+            <div className="ml-auto flex gap-1 text-text dark:text-text-dark">
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                <CornerDownLeft size={14} />
+              </div>
+              <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+                D
+              </div>
+            </div>
+          )
+        }
+      ]
+    }
+  }
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (allItems.length === 0) return
+      // If dropdown is open, handle dropdown navigation
+      if (clickedItemId) {
+        const options = getDropdownOptions(clickedItemId)
 
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        if (query === '') {
-          window.ipcRenderer.invoke('closeWindow', 'search')
-        } else {
-          setQuery('')
+        switch (event.key) {
+          case 'Escape':
+            event.preventDefault()
+            setClickedItemId(null)
+            break
+          case 'ArrowDown':
+            event.preventDefault()
+            setDropdownSelectedIndex((prev) => (prev + 1) % options.length)
+            break
+          case 'ArrowUp':
+            event.preventDefault()
+            setDropdownSelectedIndex((prev) => (prev - 1 + options.length) % options.length)
+            break
+          case 'Enter':
+            event.preventDefault()
+            options[dropdownSelectedIndex].action()
+            break
+          default:
+            break
         }
-      } else if (event.key === 'ArrowDown') {
-        event.preventDefault()
-        setSelectedIndex((prev) => (prev + 1) % allItems.length)
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault()
-        setSelectedIndex((prev) => (prev - 1 + allItems.length) % allItems.length)
-      } else if (event.key === 'Enter') {
-        event.preventDefault()
-        if (allItems[selectedIndex]) {
-          allItems[selectedIndex].action?.()
+      } else {
+        // Regular navigation when dropdown is closed
+        if (allItems.length === 0) return
+
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          if (query === '') {
+            window.ipcRenderer.invoke('closeWindow', 'search')
+          } else {
+            setQuery('')
+          }
+        } else if (event.key === 'ArrowDown') {
+          event.preventDefault()
+          setSelectedIndex((prev) => (prev + 1) % allItems.length)
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault()
+          setSelectedIndex((prev) => (prev - 1 + allItems.length) % allItems.length)
+        } else if (event.key === 'Enter') {
+          event.preventDefault()
+          if (allItems[selectedIndex]) {
+            allItems[selectedIndex].action?.()
+          }
+        } else if (event.key === 'Tab' && event.shiftKey) {
+          // Open dropdown for the currently selected item
+          const currentItem = allItems[selectedIndex]
+          if (
+            currentItem &&
+            currentItem.id !== 'calendar' &&
+            currentItem.id !== 'analytics' &&
+            currentItem.id !== 'settings'
+          ) {
+            event.preventDefault()
+            setClickedItemId(currentItem.id)
+          }
         }
       }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [allItems, selectedIndex])
+  }, [allItems, selectedIndex, clickedItemId, query, dropdownSelectedIndex])
 
   useEffect(() => {
     scrollToSelected()
@@ -202,26 +350,69 @@ const SearchPage = () => {
         return <NotebookText size={16} />
     }
   }
+
   const shouldShowPinnedSection = pinnedItems.length > 0
 
   const handlePin = (id: string) => {
-    console.log(`Pin item ${id}`)
+    pinItem(id)
+    setSearchResults(searchItems(query))
     setClickedItemId(null)
   }
 
-  const handleEdit = (id: string) => {
-    console.log(`Edit item ${id}`)
+  const handleUnpin = (id: string) => {
+    unpinItem(id)
+    setSearchResults(searchItems(query))
     setClickedItemId(null)
   }
 
-  const handleDuplicate = (id: string) => {
-    console.log(`Duplicate item ${id}`)
+  const handleOpen = (id: string) => {
+    handleNavigate(id)
     setClickedItemId(null)
   }
 
   const handleDelete = (id: string) => {
-    console.log(`Delete item ${id}`)
+    deleteItem(id)
+    setSearchResults(searchItems(query))
     setClickedItemId(null)
+  }
+
+  const renderDropdownMenu = (itemId: string) => {
+    if (itemId !== clickedItemId) return null
+
+    const options = getDropdownOptions(itemId)
+
+    return (
+      <div className="dropdown-menu absolute right-9 top-2 z-10 bg-background dark:bg-background-dark shadow-lg dark:shadow-zinc-900 rounded-md border border-border dark:border-border-dark min-w-42">
+        <div className="flex flex-col p-1">
+          {options.map((option, index) => {
+            const isSelected = dropdownSelectedIndex === index
+            const isDanger = option.danger
+
+            const baseStyle = 'flex w-full items-center gap-2 p-1 text-sm rounded-sm'
+            const selectedStyle = isSelected
+              ? isDanger
+                ? 'bg-red-100/50 dark:bg-red-900/50 text-text dark:text-text-dark'
+                : 'bg-hover/50 dark:bg-hover-dark/50'
+              : ''
+
+            const hoverStyle = isDanger
+              ? 'hover:bg-red-100 hover:dark:bg-red-900'
+              : 'hover:bg-hover dark:hover:bg-hover-dark'
+
+            return (
+              <button
+                key={option.label}
+                onClick={option.action}
+                className={`${baseStyle} ${selectedStyle} ${hoverStyle}`}
+              >
+                {option.icon} <span>{option.label}</span>
+                {option.shortcut}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
   }
   return (
     <div className="w-full h-full">
@@ -253,42 +444,26 @@ const SearchPage = () => {
         <div className="p-2 flex flex-col bg-secondary-background dark:bg-secondary-background-dark border-b border-border dark:border-border-dark">
           <div className="uppercase text-text-muted font-bold text-sm">Go to</div>
           <div className="flex gap-2 p-1">
-            <button
-              ref={calendarRef}
-              onClick={() => navigate('/calendar')}
-              className={`cursor-pointer flex gap-2 text-xs font-bold border border-button-border dark:border-button-border-dark ${
-                selectedIndex === 0
-                  ? 'bg-button-hover dark:bg-button-hover-dark'
-                  : 'bg-button dark:bg-button-dark hover:bg-button-hover hover:border-button-border-hover dark:hover:bg-button-hover-dark dark:hover:border-button-border-hover-dark'
-              } p-2 rounded-md`}
-            >
-              <Calendar size={16} /> <span>Calendar</span>
-            </button>
-            <button
-              ref={analyticsRef}
-              onClick={() => navigate('/analytics')}
-              className={`cursor-pointer flex gap-2 text-xs font-bold border border-button-border dark:border-button-border-dark ${
-                selectedIndex === 1
-                  ? 'bg-button-hover dark:bg-button-hover-dark'
-                  : 'bg-button dark:bg-button-dark hover:bg-button-hover hover:border-button-border-hover dark:hover:bg-button-hover-dark dark:hover:border-button-border-hover-dark'
-              } p-2 rounded-md`}
-            >
-              <ChartArea size={16} /> <span>Analytics</span>
-            </button>
-            <button
-              ref={settingsRef}
-              onClick={() => navigate('/settings')}
-              className={`cursor-pointer flex gap-2 text-xs font-bold border border-button-border dark:border-button-border-dark ${
-                selectedIndex === 2
-                  ? 'bg-button-hover dark:bg-button-hover-dark'
-                  : 'bg-button dark:bg-button-dark hover:bg-button-hover hover:border-button-border-hover dark:hover:bg-button-hover-dark dark:hover:border-button-border-hover-dark'
-              } p-2 rounded-md`}
-            >
-              <Settings size={16} /> <span>Settings</span>
-            </button>
+            {allItems.slice(0, navigationCount).map((button, index) => (
+              <button
+                key={button.id}
+                ref={button.ref}
+                onClick={button.action}
+                className={`cursor-pointer flex gap-2 text-xs font-bold border border-button-border dark:border-button-border-dark ${
+                  selectedIndex === index
+                    ? 'bg-button-hover dark:bg-button-hover-dark'
+                    : 'bg-button dark:bg-button-dark hover:bg-button-hover hover:border-button-border-hover dark:hover:bg-button-hover-dark dark:hover:border-button-border-hover-dark'
+                } p-2 rounded-md`}
+              >
+                {button.id === 'calendar' && <Calendar size={16} />}
+                {button.id === 'analytics' && <ChartArea size={16} />}
+                {button.id === 'settings' && <Settings size={16} />}
+                <span>{button.title}</span>
+              </button>
+            ))}
           </div>
         </div>
-        <div className="overflow-auto min-h-0">
+        <div className="overflow-auto min-h-0 h-full">
           {shouldShowPinnedSection && (
             <div
               className="p-2 flex flex-col border-b border-border dark:border-border-dark"
@@ -298,7 +473,7 @@ const SearchPage = () => {
               {pinnedItems.map((item, index) => (
                 <div
                   key={item.id}
-                  className={`pinned-item transition-color ease-out duration-400 flex rounded-sm items-center w-full ${
+                  className={`relative pinned-item transition-color ease-out duration-400 flex rounded-sm items-center w-full ${
                     selectedIndex === navigationCount + index
                       ? 'bg-hover dark:bg-hover-dark'
                       : 'hover:bg-hover dark:hover:bg-hover-dark'
@@ -323,15 +498,16 @@ const SearchPage = () => {
                   <div className="p-2">
                     <button
                       onClick={() => {
-                        console.log('test', item.content)
+                        setClickedItemId(item.id === clickedItemId ? null : item.id)
                       }}
-                      className={`cursor-pointer  text-xs font-bold border border-button-border-hover dark:border-button-border-hover-dark bg-button dark:bg-button-dark hover:bg-button-hover dark:hover:bg-button-hover-dark p-1 rounded-md ${
+                      className={`cursor-pointer more-button text-xs font-bold border border-button-border-hover dark:border-button-border-hover-dark bg-button dark:bg-button-dark hover:bg-button-hover dark:hover:bg-button-hover-dark p-1 rounded-md ${
                         hoveredItemId === item.id ? 'opacity-100' : 'opacity-0'
                       }`}
                     >
                       <MoreHorizontal size={16} />
                     </button>
                   </div>
+                  {renderDropdownMenu(item.id)}
                 </div>
               ))}
             </div>
@@ -368,61 +544,16 @@ const SearchPage = () => {
                   <div className="p-2">
                     <button
                       onClick={() => {
-                        setClickedItemId(item.id)
+                        setClickedItemId(item.id === clickedItemId ? null : item.id)
                       }}
-                      className={`cursor-pointer  text-xs font-bold border border-button-border-hover dark:border-button-border-hover-dark bg-button dark:bg-button-dark hover:bg-button-hover dark:hover:bg-button-hover-dark p-1 rounded-md ${
+                      className={`cursor-pointer more-button text-xs font-bold border border-button-border-hover dark:border-button-border-hover-dark bg-button dark:bg-button-dark hover:bg-button-hover dark:hover:bg-button-hover-dark p-1 rounded-md ${
                         hoveredItemId === item.id ? 'opacity-100' : 'opacity-0'
                       }`}
                     >
                       <MoreHorizontal size={16} />
                     </button>
                   </div>
-                  {item.id === clickedItemId && (
-                    <div className="absolute right-9 top-2 z-10 bg-background dark:bg-background-dark shadow-lg rounded-md border border-border dark:border-border-dark min-w-42">
-                      <div className="flex flex-col p-1">
-                        <button
-                          onClick={() => handleEdit(item.id)}
-                          className="flex w-full items-center gap-2 p-1 rounded-sm text-sm hover:bg-hover dark:hover:bg-hover-dark"
-                        >
-                          <SquareArrowOutUpRight size={16} /> <span>Open</span>
-                          <div className="ml-auto flex gap-1">
-                            <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                              <CornerDownLeft size={14} />
-                            </div>
-                          </div>
-                        </button>
-                        <button
-                          onClick={() => handlePin(item.id)}
-                          className="flex w-full items-center gap-2 p-1 rounded-sm text-sm hover:bg-hover dark:hover:bg-hover-dark"
-                        >
-                          <Pin size={16} /> <span>Pin</span>
-                          <div className="ml-auto flex gap-1">
-                            <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                              <ChevronUp size={14} />
-                            </div>
-                            <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                              P
-                            </div>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="flex w-full items-center gap-2 p-1 rounded-sm text-sm text-red-500 hover:bg-hover dark:hover:bg-hover-dark"
-                        >
-                          <Trash size={16} /> <span>Delete</span>
-                          <div className="ml-auto flex gap-1 text-text dark:text-text-dark">
-                            <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                              <ChevronUp size={14} />
-                            </div>
-                            <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
-                              D
-                            </div>
-                          </div>
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  {renderDropdownMenu(item.id)}
                 </div>
               ))
             ) : (
@@ -438,3 +569,52 @@ const SearchPage = () => {
 }
 
 export default SearchPage
+
+// {
+//   item.id === clickedItemId && (
+//     <div className="absolute right-9 top-2 z-10 bg-background dark:bg-background-dark shadow-lg rounded-md border border-border dark:border-border-dark min-w-42">
+//       <div className="flex flex-col p-1">
+//         <button
+//           onClick={() => handleEdit(item.id)}
+//           className="flex w-full items-center gap-2 p-1 rounded-sm text-sm hover:bg-hover dark:hover:bg-hover-dark"
+//         >
+//           <SquareArrowOutUpRight size={16} /> <span>Open</span>
+//           <div className="ml-auto flex gap-1">
+//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+//               <CornerDownLeft size={14} />
+//             </div>
+//           </div>
+//         </button>
+//         <button
+//           onClick={() => handlePin(item.id)}
+//           className="flex w-full items-center gap-2 p-1 rounded-sm text-sm hover:bg-hover dark:hover:bg-hover-dark"
+//         >
+//           <Pin size={16} /> <span>Pin</span>
+//           <div className="ml-auto flex gap-1">
+//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+//               <ChevronUp size={14} />
+//             </div>
+//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+//               P
+//             </div>
+//           </div>
+//         </button>
+
+//         <button
+//           onClick={() => handleDelete(item.id)}
+//           className="flex w-full items-center gap-2 p-1 rounded-sm text-sm text-red-500 hover:bg-hover dark:hover:bg-hover-dark"
+//         >
+//           <Trash size={16} /> <span>Delete</span>
+//           <div className="ml-auto flex gap-1 text-text dark:text-text-dark">
+//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+//               <ChevronUp size={14} />
+//             </div>
+//             <div className="h-5 w-5 flex items-center justify-center p-1 bg-hover dark:bg-hover-dark rounded">
+//               D
+//             </div>
+//           </div>
+//         </button>
+//       </div>
+//     </div>
+//   )
+// }

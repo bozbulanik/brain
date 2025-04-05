@@ -124,7 +124,7 @@ const Dropdown: React.FC<DropdownProps> = ({ items, searchable = false }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className={`bg-background dark:bg-background-dark border border-border dark:border-border-dark rounded-md shadow-lg  `}
+            className={`bg-background dark:bg-background-dark border border-border dark:border-border-dark rounded-md shadow-lg dark:shadow-zinc-900  `}
             tabIndex={-1}
           >
             {searchable && (

@@ -29,6 +29,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 let initialWindow: BrowserWindow | null
 let logWindow: BrowserWindow | null
 let searchWindow: BrowserWindow | null
+let settingsWindow: BrowserWindow | null
 
 function createInitialWindow() {
   initialWindow = new BrowserWindow({
@@ -79,6 +80,10 @@ app.whenReady().then(() => {
     createSearchWindow()
     searchWindow?.focus()
   })
+  globalShortcut.register('CommandOrControl+Alt+S', () => {
+    createSettingsWindow()
+    settingsWindow?.focus()
+  })
 })
 
 function createLogWindow() {
@@ -96,7 +101,6 @@ function createLogWindow() {
     height: 480,
     resizable: false,
     autoHideMenuBar: true,
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     transparent: true,
     center: true,
     title: '',
@@ -146,7 +150,6 @@ function createSearchWindow() {
     height: 480,
     resizable: false,
     autoHideMenuBar: true,
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     transparent: true,
     center: true,
     title: '',
@@ -181,6 +184,55 @@ function createSearchWindow() {
   }
 }
 
+function createSettingsWindow() {
+  if (settingsWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      settingsWindow.loadURL(`${VITE_DEV_SERVER_URL}settings`)
+    } else {
+      // logWindow.loadFile('dist/index.html')
+      settingsWindow.loadFile(path.join(RENDERER_DIST, 'settings'))
+    }
+    return
+  }
+  settingsWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: '',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null
+  })
+  // Test active push message to Renderer-process.
+  settingsWindow.webContents.on('did-finish-load', () => {
+    settingsWindow?.webContents.send('main-process-message', new Date().toLocaleString())
+  })
+
+  if (VITE_DEV_SERVER_URL) {
+    settingsWindow.loadURL(`${VITE_DEV_SERVER_URL}settings`)
+  } else {
+    // logWindow.loadFile('dist/index.html')
+    settingsWindow.loadFile(path.join(RENDERER_DIST, 'settings'))
+  }
+}
+
 ipcMain.handle('openWindow', async (_, windowName) => {
   switch (windowName) {
     case 'log':
@@ -190,6 +242,10 @@ ipcMain.handle('openWindow', async (_, windowName) => {
     case 'search':
       createSearchWindow()
       searchWindow?.focus()
+      break
+    case 'settings':
+      createSettingsWindow()
+      settingsWindow?.focus()
       break
     default:
       break
@@ -202,6 +258,9 @@ ipcMain.handle('closeWindow', async (_, windowName) => {
       break
     case 'search':
       searchWindow?.close()
+      break
+    case 'settings':
+      settingsWindow?.close()
       break
     default:
       break
